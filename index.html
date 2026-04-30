@@ -3,341 +3,403 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Laetitia's Handover FAQ Bot</title>
+<title>Laetitia's Handover FAQ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; padding: 32px 16px; }
 
-  .app { display: flex; flex-direction: column; height: 620px; width: 100%; max-width: 680px; background: #ffffff; border: 1px solid #e5e3db; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.07); }
+  .container { max-width: 700px; margin: 0 auto; }
 
-  .header { padding: 16px 20px; border-bottom: 1px solid #e5e3db; background: #fafaf7; display: flex; align-items: center; gap: 12px; }
-  .header-dot { width: 9px; height: 9px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; }
-  .header-text h2 { font-size: 15px; font-weight: 600; color: #1a1a18; }
-  .header-text p { font-size: 12px; color: #888780; margin-top: 2px; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 { font-size: 22px; font-weight: 600; color: #1a1a18; }
+  .page-header p { font-size: 14px; color: #888780; margin-top: 6px; line-height: 1.5; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: #E1F5EE; color: #0F6E56; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; }
 
-  .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .messages::-webkit-scrollbar { width: 4px; }
-  .messages::-webkit-scrollbar-thumb { background: #d3d1c7; border-radius: 4px; }
+  .search-wrap { position: relative; margin-bottom: 24px; }
+  .search-wrap input { width: 100%; padding: 11px 16px 11px 40px; border: 1px solid #d3d1c7; border-radius: 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; font-family: inherit; }
+  .search-wrap input:focus { border-color: #1D9E75; box-shadow: 0 0 0 3px rgba(29,158,117,0.1); }
+  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #b4b2a9; font-size: 16px; pointer-events: none; }
 
-  .msg { display: flex; flex-direction: column; gap: 3px; max-width: 85%; }
-  .msg.user { align-self: flex-end; align-items: flex-end; }
-  .msg.bot { align-self: flex-start; align-items: flex-start; }
+  .section { margin-bottom: 10px; }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #b4b2a9; padding: 0 4px; margin: 24px 0 8px; }
 
-  .bubble { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
-  .msg.user .bubble { background: #1D9E75; color: white; border-bottom-right-radius: 4px; }
-  .msg.bot .bubble { background: #f5f5f0; color: #1a1a18; border: 1px solid #e5e3db; border-bottom-left-radius: 4px; }
+  .faq-item { background: #fff; border: 1px solid #e5e3db; border-radius: 12px; margin-bottom: 6px; overflow: hidden; transition: border-color 0.15s; }
+  .faq-item.open { border-color: #9FE1CB; }
+  .faq-item.hidden { display: none; }
 
-  .msg-label { font-size: 11px; color: #b4b2a9; padding: 0 4px; }
+  .faq-q { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .faq-q:hover { background: #fafaf7; }
+  .faq-q-text { font-size: 14px; font-weight: 500; color: #1a1a18; line-height: 1.4; }
+  .faq-icon { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #d3d1c7; display: flex; align-items: center; justify-content: center; color: #888780; font-size: 13px; transition: all 0.2s; }
+  .faq-item.open .faq-icon { background: #1D9E75; border-color: #1D9E75; color: white; transform: rotate(45deg); }
 
-  .typing { display: flex; align-items: center; gap: 5px; padding: 10px 14px; background: #f5f5f0; border: 1px solid #e5e3db; border-radius: 14px; border-bottom-left-radius: 4px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: #b4b2a9; animation: bounce 1.2s infinite; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+  .faq-a { display: none; padding: 0 16px 14px; font-size: 14px; color: #444441; line-height: 1.65; border-top: 1px solid #f0efe8; margin-top: 0; }
+  .faq-item.open .faq-a { display: block; }
 
-  .suggestions { padding: 8px 16px 4px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; border: 1px solid #d3d1c7; background: #ffffff; color: #5f5e5a; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
-  .chip:hover { border-color: #1D9E75; color: #0F6E56; background: #E1F5EE; }
+  .faq-a ul { padding-left: 18px; margin: 8px 0; }
+  .faq-a li { margin-bottom: 5px; }
+  .faq-a strong { color: #1a1a18; font-weight: 600; }
+  .faq-a a { color: #1D9E75; text-decoration: none; }
+  .faq-a a:hover { text-decoration: underline; }
+  .faq-a .tag { display: inline-block; background: #faeeda; color: #854F0B; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; margin-right: 4px; }
+  .faq-a .tag.red { background: #FCEBEB; color: #A32D2D; }
+  .faq-a .tag.green { background: #E1F5EE; color: #0F6E56; }
+  .faq-a .note { margin-top: 10px; padding: 10px 12px; background: #faeeda; border-radius: 8px; font-size: 13px; color: #633806; }
+  .faq-a .note.red { background: #FCEBEB; color: #791F1F; }
+  .faq-a .note.green { background: #E1F5EE; color: #085041; }
 
-  .input-row { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #e5e3db; background: #fafaf7; }
-  #userInput { flex: 1; font-size: 14px; padding: 9px 13px; border: 1px solid #d3d1c7; border-radius: 8px; background: #ffffff; color: #1a1a18; outline: none; font-family: inherit; }
-  #userInput:focus { border-color: #1D9E75; box-shadow: 0 0 0 3px rgba(29,158,117,0.1); }
-  #sendBtn { padding: 9px 18px; border-radius: 8px; border: none; background: #1D9E75; color: white; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-  #sendBtn:hover { opacity: 0.87; }
-  #sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .no-results { text-align: center; padding: 40px 20px; color: #888780; font-size: 14px; display: none; }
+
+  .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #b4b2a9; }
 </style>
 </head>
 <body>
+<div class="container">
 
-<div class="app">
-  <div class="header">
-    <div class="header-dot"></div>
-    <div class="header-text">
-      <h2>Laetitia's Handover FAQ</h2>
-      <p>Ask me anything about who owns what, what to do, or where to find things</p>
+  <div class="page-header">
+    <div class="badge"><span class="badge-dot"></span>Maternity leave — active</div>
+    <h1>Laetitia's Handover FAQ</h1>
+    <p>Everything you need to know about who owns what, what's on hold, and what to do while Laetitia is away. Click any question to see the answer.</p>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search questions…" oninput="filterFAQs()" />
+  </div>
+
+  <!-- OWNERSHIP -->
+  <div class="section-label">Ownership</div>
+
+  <div class="faq-item" data-tags="owner omnia dashboard antonella waleska llm aio">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who owns the Omnia / LLM visibility dashboard?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <ul>
+        <li><strong>Waleska</strong> — strategy execution and onboarding the LLM specialist</li>
+        <li><strong>Antonella</strong> — manages the Omnia executive dashboard weekly and improves it over time based on new requests</li>
+      </ul>
+      <p style="margin-top:8px">The dashboard is sent automatically by email each week — no manual distribution needed.</p>
+      <div class="note green">Dashboard link: <a href="https://lwoue-collab.github.io/omnia-dashboard" target="_blank">lwoue-collab.github.io/omnia-dashboard</a></div>
     </div>
   </div>
 
-  <div class="messages" id="messages">
-    <div class="msg bot">
-      <span class="msg-label">Assistant</span>
-      <div class="bubble">Hi team! 👋 I have Laetitia's full handover loaded. Ask me who owns what, what needs manager approval, what to do if a dashboard fails — anything covered in the handover doc.</div>
+  <div class="faq-item" data-tags="owner seo waleska blog content redirects">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who owns SEO and blog content?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska</strong> owns SEO.</p>
+      <ul>
+        <li>Assigns new content updates each week</li>
+        <li>Runs one redirect per week</li>
+        <li>Uses <strong>#blog-monitor</strong> Slack channel for Monday priority decisions</li>
+      </ul>
+      <p style="margin-top:8px">Mar and Francesc are GSC admins and can grant access to freelancers if needed.</p>
     </div>
   </div>
 
-  <div class="suggestions" id="chips">
-    <div class="chip" onclick="ask('Who owns the Omnia dashboard?')">Who owns Omnia?</div>
-    <div class="chip" onclick="ask('What workstreams need manager approval?')">What needs approval?</div>
-    <div class="chip" onclick="ask('Who handles affiliate intake calls?')">Affiliate intake?</div>
-    <div class="chip" onclick="ask('What do I do if a dashboard workflow fails?')">Dashboard failure?</div>
-    <div class="chip" onclick="ask('Who is handling Reddit and how do I get Launch Club credits?')">Reddit channel?</div>
-    <div class="chip" onclick="ask('How does invoicing work for Revleads and Vloom?')">Invoicing?</div>
-    <div class="chip" onclick="ask('How do I use the Claude skills Francesc manages?')">Claude skills?</div>
-    <div class="chip" onclick="ask('What is the status of the AE special project?')">AE project?</div>
+  <div class="faq-item" data-tags="owner email marina antonella copy gpt">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles email copy?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Marina and Antonella</strong> own email.</p>
+      <ul>
+        <li>Email copy is written using a custom GPT fed with best-performing historical copies</li>
+        <li>Use the GPT as a starting point — it is <strong>not production-ready on its own</strong></li>
+        <li>A bank of emergency emails exists (based on Typeform questions) — pull from this if short on HOT SAL emails</li>
+      </ul>
+    </div>
   </div>
 
-  <div class="input-row">
-    <input id="userInput" type="text" placeholder="Ask anything about the handover..." onkeydown="if(event.key==='Enter')send()" />
-    <button id="sendBtn" onclick="send()">Send</button>
+  <div class="faq-item" data-tags="owner youtube waleska antonella vloom video blog">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles YouTube?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska and Antonella</strong> own YouTube.</p>
+      <ul>
+        <li>This involves turning blog posts that rank for video keywords into videos, in collaboration with Vloom</li>
+        <li>Antonella continues working with Vloom on video production from blog content</li>
+      </ul>
+    </div>
   </div>
+
+  <div class="faq-item" data-tags="owner reviews g2 syed alice community">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles G2 reviews?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Community team (Alice)</strong> owns reviews. Freelancer <strong>Syed</strong> publishes the reviews on G2.</p>
+      <ul>
+        <li>All published reviews are saved in a tracking document</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="owner invoicing waleska vloom revleads finance">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles invoicing?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska</strong> owns invoicing. There are two sources:</p>
+      <ul>
+        <li><strong>Vloom:</strong> Arrives monthly via Slack in the shared channel with Aron and Juan (includes an updated tracker). Waleska has been added — no action needed beyond tracking.</li>
+        <li><strong>Revleads:</strong> Manual extraction needed each month. Go to Revleads billing section → extract the invoice → send to Finance.</li>
+      </ul>
+      <div class="note">March invoice already flagged to Finance. April invoices sent with team in cc.</div>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="owner mlm reporting waleska francesc sitroon">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles MLM reporting and where does it go?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska</strong> owns MLM reporting (organic and email).</p>
+      <div class="note red">Per Francesc's preference: share results <strong>directly with Francesc only</strong> — do NOT include in the sitroon.</div>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="owner dashboards github waleska francesc blog monitor publishing">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who can edit the internal dashboards?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska and Francesc</strong> both have GitHub edit access to all dashboards.</p>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="owner claude skills francesc blog omnia tagging">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who manages the Claude skills?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Francesc</strong> owns Claude skills.</p>
+      <ul>
+        <li><strong>Blog post reviews:</strong> drag the SKILL.md into Claude and ask it to review a blog post against the established SEO and LLM methodology</li>
+        <li><strong>Omnia tagging:</strong> drag the SKILL.md into Claude and ask "tag this prompt using this methodology" — the full decision flow, theme boundaries, and worked examples are inside</li>
+      </ul>
+      <p style="margin-top:8px">Any team member with a Claude Pro or Team account can use these.</p>
+    </div>
+  </div>
+
+  <!-- MANAGER ACTIONS -->
+  <div class="section-label">Things needing manager action</div>
+
+  <div class="faq-item" data-tags="manager approval reddit affiliate ae dpc unassigned">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">What still needs manager approval or a decision?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p>Four items are flagged as needing manager input:</p>
+      <ul>
+        <li><span class="tag red">Unresolved</span> <strong>Affiliate intake:</strong> Confirm whether Waleska or Oli covers the calls</li>
+        <li><span class="tag red">Unresolved</span> <strong>Reddit:</strong> Assign an owner — currently no one is responsible</li>
+        <li><span class="tag red">Approval needed</span> <strong>AE special project:</strong> Francesc & Mar must approve video strategy before Waleska can set up the meeting with Javi and Karlis</li>
+        <li><span class="tag red">Approval needed</span> <strong>Audit of DPC emails:</strong> Francesc & Mar must approve strategy before Marina or Waleska can proceed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="affiliate intake calls waleska oli manager decision">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles affiliate intake calls?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <div class="note red">This is unresolved — the manager needs to decide between <strong>Waleska</strong> or <strong>Oli</strong> before leave begins.</div>
+      <p style="margin-top:10px">When running the calls:</p>
+      <ul>
+        <li>Qualify the affiliate — understand their situation and fit</li>
+        <li><strong>Do not share sales-related information</strong> on the call — connect the affiliate to the sales team for that</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="reddit unassigned launch club sergi credits posting">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Who handles Reddit and how do I get Launch Club credits?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <div class="note red"><strong>Reddit is currently unassigned.</strong> A manager must assign an owner before leave begins.</div>
+      <p style="margin-top:10px">Once assigned, the owner should:</p>
+      <ul>
+        <li>Keep the posting tracker doc updated</li>
+        <li>Request <strong>Sergi's card</strong> to top up Launch Club credits when needed</li>
+      </ul>
+      <p style="margin-top:8px">Posts are managed via Launch Club.</p>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="ae special project video strategy waleska francesc mar javi karlis approval">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Can Waleska set up the AE project meeting with Javi and Karlis?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <div class="note red"><strong>Not yet.</strong> Francesc and Mar must review and approve the video strategy and goals first. The meeting cannot be scheduled until approval is confirmed.</div>
+      <p style="margin-top:10px">Once approved, Waleska sets up the meeting with Javi and Karlis.</p>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="dpc emails audit marina waleska francesc mar approval strategy">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">Can Marina or Waleska start the DPC email audit?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <div class="note red"><strong>Not yet.</strong> Francesc and Mar must approve the strategy and goals before this project can move forward.</div>
+      <p style="margin-top:10px">Once approved:</p>
+      <ul>
+        <li>Marina updates the email copies</li>
+        <li>Waleska implements the new copies and strategy</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DASHBOARDS -->
+  <div class="section-label">Dashboards & tools</div>
+
+  <div class="faq-item" data-tags="dashboard workflow fail github actions blog monitor fix">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">What do I do if a dashboard workflow fails?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Blog monitor dashboard:</strong></p>
+      <ul>
+        <li>Go to <a href="https://github.com/lwoue-collab/redpoints-blog-monitor" target="_blank">github.com/lwoue-collab/redpoints-blog-monitor</a></li>
+        <li>Click <strong>Actions</strong> → re-run the latest workflow manually</li>
+      </ul>
+      <p style="margin-top:10px"><strong>LLM visibility dashboard:</strong></p>
+      <ul>
+        <li>Go to <a href="https://github.com/lwoue-collab/omnia-dashboard" target="_blank">github.com/lwoue-collab/omnia-dashboard</a></li>
+        <li>Click <strong>Actions</strong> → re-run the latest workflow manually</li>
+        <li>No code changes needed</li>
+      </ul>
+      <div class="note green">Both dashboards refresh automatically every Monday at 08:00 UTC. Data is at most 7 days old.</div>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="blog monitor dashboard what is high danger medium watchlist stable">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">How do I read the blog monitor dashboard?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p>The blog monitor tracks all KEEP posts from the 2026 audit and flags them by risk level:</p>
+      <ul>
+        <li><span class="tag red">High danger</span> Post lost significant traffic or ranking — needs immediate action</li>
+        <li><span class="tag">Medium danger</span> Declining — worth prioritising soon</li>
+        <li><span class="tag">Watchlist</span> Worth keeping an eye on</li>
+        <li><span class="tag green">Stable</span> No action needed</li>
+      </ul>
+      <p style="margin-top:8px">Use the Monday email and the <strong>#blog-monitor</strong> Slack message to decide which posts to update first each week.</p>
+      <div class="note green">Link: <a href="https://lwoue-collab.github.io/redpoints-blog-monitor" target="_blank">lwoue-collab.github.io/redpoints-blog-monitor</a></div>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="publishing dashboard what is posts updated clicks impressions ctr">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">What does the publishing updates dashboard show?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p>It tracks how many blog posts have been published or updated each month, with:</p>
+      <ul>
+        <li>Clicks, impressions, CTR and position change per post</li>
+        <li>Whether updated posts are recovering traffic</li>
+      </ul>
+      <p style="margin-top:8px">Navigate between months using the arrows. Data refreshes every Monday — not live, at most 7 days old.</p>
+      <div class="note green">Link: <a href="https://lwoue-collab.github.io/redpoints-blog-monitor/dashboard.html" target="_blank">redpoints-blog-monitor/dashboard.html</a></div>
+    </div>
+  </div>
+
+  <div class="faq-item" data-tags="llm omnia dashboard tabs performance visibility content priorities bofu mofu tofu">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">What does the LLM visibility dashboard show?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p>Tracks Red Points' visibility across ChatGPT, Gemini, and Perplexity. Three tabs:</p>
+      <ul>
+        <li><strong>Performance</strong> — weekly BOFU/MOFU/TOFU mention rates, competitor share of voice, top cited sources per funnel stage</li>
+        <li><strong>Visibility by theme</strong> — breakdown by content theme (brand impersonation, fake products, etc.) with the exact prompts tracked</li>
+        <li><strong>Content priorities</strong> — what content to create next, who currently leads, what pages LLMs are citing</li>
+      </ul>
+      <div class="note green">Link: <a href="https://lwoue-collab.github.io/omnia-dashboard" target="_blank">lwoue-collab.github.io/omnia-dashboard</a></div>
+    </div>
+  </div>
+
+  <!-- CMO / PARTNERSHIPS -->
+  <div class="section-label">Partnerships & CMO.com</div>
+
+  <div class="faq-item" data-tags="cmo.com partnership revleads emma submissions spotlight waleska">
+    <div class="faq-q" onclick="toggle(this)">
+      <span class="faq-q-text">What's the status of the CMO.com partnership and what needs to happen?</span>
+      <span class="faq-icon">+</span>
+    </div>
+    <div class="faq-a">
+      <p><strong>Waleska</strong> owns this. Point of contact: <strong>emma@revleads.com</strong> (Revleads).</p>
+      <ul>
+        <li>Two partner spotlight submissions remain</li>
+        <li>Submissions follow this format: product story, customer story, or industry story</li>
+        <li>Revleads is also the invoicing tool — invoices must be extracted manually from the billing section each month and sent to Finance</li>
+      </ul>
+      <div class="note">March invoice already flagged to Finance. April invoices sent with team in cc.</div>
+    </div>
+  </div>
+
+  <div class="no-results" id="noResults">No questions match your search. Try different keywords.</div>
+
+  <div class="footer">Last updated before Laetitia's maternity leave · Questions? Check with Francesc or Mar</div>
 </div>
 
 <script>
-const HANDOVER = `
-LAETITIA MATERNITY LEAVE HANDOVER
-
-OWNERSHIP AT A GLANCE
-- AIO / LLM visibility: Waleska (strategy), Antonella (dashboard) | Periodically check
-- Omnia dashboard: Antonella | Review weekly email update
-- Affiliate intake: Waleska or Oli — MANAGER DECISION NEEDED on who covers
-- SEO: Waleska | Review weekly email update
-- CMO.com partnership: Waleska, contact: emma@revleads.com
-- Internal dashboards: Waleska / Francesc | Review weekly email update
-- Email: Marina / Antonella
-- Reviews: Community team (Alice), freelancer: Syed
-- Reddit: UNASSIGNED — MANAGER MUST ASSIGN OWNER BEFORE LEAVE
-- Claude skills: Francesc
-- Invoicing: Waleska
-- MLM reporting: Waleska
-- YouTube: Waleska / Antonella
-- AE special project: Waleska execution, Francesc & Mar must APPROVE FIRST
-- Audit of DPC emails: Marina & Waleska execution, Francesc & Mar must APPROVE FIRST
-
----
-
-AIO / LLM VISIBILITY
-Owner: Waleska (strategy), Antonella (dashboard)
-- Tracking Red Points' presence in AI-generated answers via Omnia
-- Blog writing test with Brogan in progress to improve LLM pickup on listicle and comparison posts
-- Prompts last updated April 24th with new tagging methodology
-- Waleska to onboard the selected LLM specialist and execute strategy
-- Antonella to manage the Omnia executive dashboard weekly and improve it over time
-- Dashboard sent automatically by email each week — no manual distribution needed
-- Links: Omnia tagging methodology in Slack: C08T56KB999 | Omnia executive dashboard: lwoue-collab.github.io/omnia-dashboard
-
----
-
-AFFILIATE INTAKE
-Owner: Waleska or Oli — manager decision still needed
-- Applicants book an initial call for qualification. Laetitia ran all these calls personally.
-- Qualify the affiliate — understand their situation and fit
-- Do NOT share sales-related information on the call; connect affiliate to sales team for that
-- MANAGER ACTION: Confirm whether Waleska or Oli handles affiliate intake calls
-
----
-
-SEO
-Owner: Waleska
-- Ongoing content updates and weekly redirects
-- Mar and Francesc are GSC admins and can grant access to freelancers if needed
-- Waleska assigns new content updates each week
-- Run one redirect per week
-- Use #blog-monitor Slack channel for Monday priority decisions — data pulled from GSC and Omnia
-- Links: Blog update dashboard: lwoue-collab.github.io/redpoints-blog-monitor | Publishing dashboard: redpoints-blog-monitor/dashboard.html
-
----
-
-CMO.COM PARTNERSHIP
-Owner: Waleska | Contact: emma@revleads.com (Revleads)
-- Two partner spotlight submissions remain
-- Revleads is also the invoicing tool — invoices extracted manually from billing section each month
-- Submission format: product story, customer story, or industry story
-- March invoice already flagged to Finance; April invoices sent with team in cc
-- Each month: go to Revleads billing, extract invoice, send to Finance
-
----
-
-INTERNAL DASHBOARDS
-Owner: Waleska / Francesc (both have GitHub edit access)
-
-Weekly blog update dashboard (lwoue-collab.github.io/redpoints-blog-monitor):
-- Tracks health of all KEEP posts from the 2026 blog audit
-- Pulls data from Google Search Console and Omnia each week
-- Flags posts by risk: High Danger, Medium Danger, Watchlist, Stable
-- High Danger = post lost significant traffic or ranking, needs immediate action
-- Monday email and Slack message in #blog-monitor summarise top priorities for the week
-- IF WORKFLOW FAILS: go to github.com/lwoue-collab/redpoints-blog-monitor → Actions → re-run the latest workflow manually
-
-Publishing updates dashboard (redpoints-blog-monitor/dashboard.html):
-- Tracks blog posts published/updated each month with clicks, impressions, CTR, position change
-- Navigate between months using the arrows
-- Data refreshes every Monday alongside blog monitor workflow (max 7 days old, not live)
-
-LLM visibility dashboard (lwoue-collab.github.io/omnia-dashboard):
-- Tracks Red Points' visibility across ChatGPT, Gemini, Perplexity by funnel stage and content theme
-- Three tabs: Performance (weekly BOFU/MOFU/TOFU mention rates, competitor share of voice), Visibility by theme (breakdown by content theme with exact prompts), Content priorities (what to create next, who leads, what pages LLMs cite)
-- Data refreshes automatically every Monday at 08:00 UTC via GitHub Action
-- IF WORKFLOW FAILS: go to github.com/lwoue-collab/omnia-dashboard → Actions → re-run latest workflow. No code changes needed.
-
----
-
-EMAIL
-Owner: Marina / Antonella
-- Email copy written with a custom GPT fed with best-performing historical copies
-- A bank of emergency emails is available based on frequently asked Typeform questions — use if short on HOT SAL
-- Use the GPT as a starting point — it is NOT production-ready on its own
-- Pull from the emergency bank if short on HOT SAL emails
-
----
-
-REVIEWS
-Owner: Community team (Alice), freelancer: Syed
-- G2 reviews published via freelancer Syed
-- All published reviews saved in a tracking document
-
----
-
-REDDIT
-Owner: UNASSIGNED — needs an owner BEFORE leave begins
-- Posts managed via Launch Club. A document tracks everything posted.
-- Credits topped up using Sergi's card
-- Keep the posting tracker doc updated
-- Request Sergi's card to add Launch Club credits when needed
-- MANAGER ACTION REQUIRED: Assign a Reddit owner before leave — currently no one is responsible
-
----
-
-CLAUDE SKILLS
-Owner: Francesc
-- Any team member with Claude Pro or Team account can use these
-- Blog post reviews: drag the SKILL.md into Claude and ask it to review a blog post against the established methodology for LLM and SEO optimisation
-- Omnia tagging: drag the SKILL.md into Claude and ask "tag this prompt using this methodology." Full decision flow, theme boundaries, and worked examples are inside.
-
----
-
-INVOICING
-Owner: Waleska
-Two sources:
-1. Vloom: arrives monthly via Slack in the shared channel with Aron and Juan, includes an updated tracker. Waleska has been added — no action needed beyond tracking.
-2. Revleads: manual extraction needed each month. Go to billing section, extract the invoice, send to Finance.
-
----
-
-MLM REPORTING
-Owner: Waleska
-- Organic and email MLM reporting
-- Per Francesc's preference: keep SEPARATE from the sitroon
-- Share results directly with Francesc — do NOT include in the sitroon
-
----
-
-YOUTUBE
-Owner: Waleska / Antonella
-- Turning blog posts that rank for video keywords into videos, in collaboration with Vloom
-- Antonella to continue working with Vloom on video production from blog content
-
----
-
-AE SPECIAL PROJECT
-Owner: Waleska (execution) | Approvers: Francesc & Mar
-- A video strategy project
-- Waleska is ready to set up a meeting with Javi and Karlis — BUT APPROVAL MUST COME FIRST
-- Francesc and Mar must review and approve the video strategy and goals
-- Waleska sets up the meeting with Javi and Karlis ONLY after approval is confirmed
-- Meeting CANNOT be scheduled until approval is done
-
----
-
-AUDIT OF DPC EMAILS
-Owner: Marina & Waleska (execution) | Approvers: Francesc & Mar
-- Audit and review DPC emails: ensure copies are well-optimised, messaging is accurate, define potential new assets to improve prospects' first impression of Red Points
-- Francesc and Mar must review and approve the strategy and goals FIRST
-- Marina updates emails after approval
-- Waleska implements new copies and strategy after approval
-- Project CANNOT move forward without Francesc and Mar's approval
-`;
-
-const history = [];
-
-function scrollBottom() {
-  const m = document.getElementById('messages');
-  m.scrollTop = m.scrollHeight;
+function toggle(el) {
+  const item = el.closest('.faq-item');
+  item.classList.toggle('open');
 }
 
-function addMsg(role, text) {
-  const msgs = document.getElementById('messages');
-  const wrap = document.createElement('div');
-  wrap.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
-  const label = document.createElement('span');
-  label.className = 'msg-label';
-  label.textContent = role === 'user' ? 'You' : 'Assistant';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.textContent = text;
-  wrap.appendChild(label);
-  wrap.appendChild(bubble);
-  msgs.appendChild(wrap);
-  scrollBottom();
-  return bubble;
-}
-
-function showTyping() {
-  const msgs = document.getElementById('messages');
-  const wrap = document.createElement('div');
-  wrap.className = 'msg bot';
-  wrap.id = 'typing-indicator';
-  const label = document.createElement('span');
-  label.className = 'msg-label';
-  label.textContent = 'Assistant';
-  const typing = document.createElement('div');
-  typing.className = 'typing';
-  for(let i=0;i<3;i++){const d=document.createElement('div');d.className='dot';typing.appendChild(d);}
-  wrap.appendChild(label);
-  wrap.appendChild(typing);
-  msgs.appendChild(wrap);
-  scrollBottom();
-}
-
-function removeTyping() {
-  const t = document.getElementById('typing-indicator');
-  if(t) t.remove();
-}
-
-async function ask(question) {
-  document.getElementById('userInput').value = question;
-  await send();
-}
-
-async function send() {
-  const input = document.getElementById('userInput');
-  const btn = document.getElementById('sendBtn');
-  const text = input.value.trim();
-  if(!text) return;
-
-  input.value = '';
-  btn.disabled = true;
-  document.getElementById('chips').style.display = 'none';
-
-  addMsg('user', text);
-  history.push({ role: 'user', content: text });
-  showTyping();
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are a helpful assistant for Laetitia's team while she is on maternity leave. You answer questions ONLY based on the handover document below. Be concise, warm and practical. Use bullet points when listing multiple things. If the answer is not in the document, say clearly that it is not covered in the handover and they should check with the manager. Never make up or infer information not in the document.\n\nHANDOVER DOCUMENT:\n${HANDOVER}`,
-        messages: history
-      })
-    });
-
-    const data = await resp.json();
-    removeTyping();
-
-    const reply = data.content?.find(b => b.type === 'text')?.text || 'Sorry, something went wrong. Please try again.';
-    addMsg('bot', reply);
-    history.push({ role: 'assistant', content: reply });
-
-  } catch(e) {
-    removeTyping();
-    addMsg('bot', 'Could not connect to the assistant. Please check your internet connection and try again.');
-  }
-
-  btn.disabled = false;
-  input.focus();
+function filterFAQs() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const items = document.querySelectorAll('.faq-item');
+  let visible = 0;
+  items.forEach(item => {
+    const text = (item.querySelector('.faq-q-text').textContent + ' ' + (item.dataset.tags || '')).toLowerCase();
+    if (!q || text.includes(q)) {
+      item.classList.remove('hidden');
+      visible++;
+    } else {
+      item.classList.add('hidden');
+      item.classList.remove('open');
+    }
+  });
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+  const labels = document.querySelectorAll('.section-label');
+  labels.forEach(label => {
+    let next = label.nextElementSibling;
+    let hasVisible = false;
+    while(next && !next.classList.contains('section-label')) {
+      if(!next.classList.contains('hidden') && next.classList.contains('faq-item')) hasVisible = true;
+      next = next.nextElementSibling;
+    }
+    label.style.display = hasVisible ? '' : 'none';
+  });
 }
 </script>
 </body>
